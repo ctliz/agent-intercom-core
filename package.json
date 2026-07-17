@@ -13,19 +13,30 @@
     "url": "https://github.com/dataforxyz/agent-intercom-core/issues"
   },
   "files": [
-    "src",
+    "dist",
     "LICENSE",
     "README.md"
   ],
   "exports": {
-    ".": "./src/index.ts",
-    "./policy": "./src/policy.ts",
-    "./vectors": "./src/policy-vectors.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./policy": {
+      "types": "./dist/policy.d.ts",
+      "import": "./dist/policy.js"
+    },
+    "./vectors": {
+      "types": "./dist/policy-vectors.d.ts",
+      "import": "./dist/policy-vectors.js"
+    }
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.ts",
-    "verify": "npm run typecheck && npm test"
+    "verify": "npm run typecheck && npm test && npm run build"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
