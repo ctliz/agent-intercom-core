@@ -1,9 +1,9 @@
-export const POLICY_SEMANTICS_VERSION = 1;
+export const POLICY_SEMANTICS_VERSION = 2;
 
-export type PolicyAction = "discover" | "send" | "ask" | "reply";
+export type PolicyAction = "discover" | "send" | "ask" | "reply" | "inspect_tree" | "delegate_child" | "revoke" | "adopt";
 export type PrincipalKind = "local" | "remote";
 export type PrincipalState = "active" | "revoked";
-export type PrincipalPolicy = "local-public" | "remote-parent";
+export type PrincipalPolicy = "local-public" | "remote-tree";
 
 export interface PolicyPrincipal {
   id: string;
@@ -31,7 +31,7 @@ export type AuthorizationDenialCode =
   | "POLICY_DENIED";
 
 export type AuthorizationDecision =
-  | { allowed: true; reason: "self" | "local-public" | "direct-parent" }
+  | { allowed: true; reason: "self" | "local-public" | "direct-parent" | "ancestor-chain" | "ancestor-control" }
   | { allowed: false; code: AuthorizationDenialCode };
 
 function activePrincipal(state: PolicyState, id: string): PolicyPrincipal | undefined {
@@ -57,7 +57,7 @@ export function isAncestor(state: PolicyState, ancestorId: string, descendantId:
 export function authorize(
   state: PolicyState,
   actorId: string,
-  _action: PolicyAction,
+  action: PolicyAction,
   targetId: string,
   context: AuthorizationContext = {},
 ): AuthorizationDecision {
@@ -73,7 +73,15 @@ export function authorize(
   }
   if (actor.id === target.id) return { allowed: true, reason: "self" };
   if (actor.kind === "local" && target.kind === "local") return { allowed: true, reason: "local-public" };
-  if (isDirectParentPair(actor, target)) return { allowed: true, reason: "direct-parent" };
+  if (action === "discover" || action === "send" || action === "ask" || action === "reply") {
+    if (isDirectParentPair(actor, target)) return { allowed: true, reason: "direct-parent" };
+    if (isAncestor(state, actor.id, target.id) || isAncestor(state, target.id, actor.id)) {
+      return { allowed: true, reason: "ancestor-chain" };
+    }
+  }
+  if (action === "inspect_tree" || action === "revoke" || action === "adopt") {
+    if (isAncestor(state, actor.id, target.id)) return { allowed: true, reason: "ancestor-control" };
+  }
   return { allowed: false, code: "POLICY_DENIED" };
 }
 

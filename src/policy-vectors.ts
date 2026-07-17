@@ -32,7 +32,7 @@ const remoteManager: PolicyPrincipal = {
   kind: "remote",
   state: "active",
   generation: 1,
-  policy: "remote-parent",
+  policy: "remote-tree",
   parentSessionId: "local-root",
   rootSessionId: "local-root",
 };
@@ -41,7 +41,7 @@ const remoteChild: PolicyPrincipal = {
   kind: "remote",
   state: "active",
   generation: 1,
-  policy: "remote-parent",
+  policy: "remote-tree",
   parentSessionId: "remote-manager",
   rootSessionId: "local-root",
 };
@@ -50,7 +50,7 @@ const remoteSibling: PolicyPrincipal = {
   kind: "remote",
   state: "active",
   generation: 1,
-  policy: "remote-parent",
+  policy: "remote-tree",
   parentSessionId: "remote-manager",
   rootSessionId: "local-root",
 };
@@ -84,16 +84,16 @@ export const POLICY_VECTORS: PolicyVector[] = [
     expectedReasonOrCode: "direct-parent",
   },
   {
-    name: "remote child cannot skip its direct parent in phase zero",
+    name: "remote child can reach its local root through the ancestor chain",
     principals: [localRoot, remoteManager, remoteChild],
     actorId: "remote-child",
     action: "send",
     targetId: "local-root",
-    expectedAllowed: false,
-    expectedReasonOrCode: "POLICY_DENIED",
+    expectedAllowed: true,
+    expectedReasonOrCode: "ancestor-chain",
   },
   {
-    name: "remote siblings cannot communicate in phase zero",
+    name: "remote siblings cannot communicate in phase one",
     principals: [localRoot, remoteManager, remoteChild, remoteSibling],
     actorId: "remote-child",
     action: "discover",
@@ -120,6 +120,33 @@ export const POLICY_VECTORS: PolicyVector[] = [
     expectedReasonOrCode: "POLICY_DENIED",
   },
   {
+    name: "remote manager may inspect its descendant subtree",
+    principals: [localRoot, remoteManager, remoteChild],
+    actorId: "remote-manager",
+    action: "inspect_tree",
+    targetId: "remote-child",
+    expectedAllowed: true,
+    expectedReasonOrCode: "ancestor-control",
+  },
+  {
+    name: "remote child cannot revoke its ancestor",
+    principals: [localRoot, remoteManager, remoteChild],
+    actorId: "remote-child",
+    action: "revoke",
+    targetId: "remote-manager",
+    expectedAllowed: false,
+    expectedReasonOrCode: "POLICY_DENIED",
+  },
+  {
+    name: "remote principal may request attenuated delegation under itself",
+    principals: [localRoot, remoteManager],
+    actorId: "remote-manager",
+    action: "delegate_child",
+    targetId: "remote-manager",
+    expectedAllowed: true,
+    expectedReasonOrCode: "self",
+  },
+  {
     name: "revoked principal cannot communicate",
     principals: [localRoot, { ...remoteManager, state: "revoked" }],
     actorId: "remote-manager",
@@ -144,5 +171,5 @@ export function stateForVector(vector: PolicyVector): PolicyState {
   return { principals: Object.fromEntries(vector.principals.map((principal) => [principal.id, structuredClone(principal)])) };
 }
 
-export const POLICY_VECTOR_SCHEMA_VERSION = 1;
-export const POLICY_SEMANTICS_HASH = "78178a5fd57c353342642968d3a27262ed02cb236927723675d875959413dce3";
+export const POLICY_VECTOR_SCHEMA_VERSION = 2;
+export const POLICY_SEMANTICS_HASH = "f3b00e503631bc91123aedfbcf1df72cc9913e1893c09728b2c598f3dcdfdfe0";

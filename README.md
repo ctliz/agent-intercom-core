@@ -6,15 +6,16 @@ This package is intentionally narrow. It contains pure, versioned authorization 
 
 ## Current policy semantics
 
-Version 1 is the fail-closed remote foundation:
+Version 2 provides ownership-tree routing:
 
 - Existing local sessions retain public local behavior.
-- A restricted remote session can discover and communicate only with its direct parent.
-- The relationship is symmetric, so asks and replies cannot become orphaned.
+- Communication is symmetric along one ancestor chain: root ↔ manager ↔ lead ↔ worker.
+- Remote siblings, cousins, unrelated local sessions, and unrelated trees remain denied.
+- Administrative subtree actions are directional: ancestors may inspect, revoke, or adopt descendants, while descendants cannot control ancestors.
+- A principal may request attenuated child delegation only under itself.
 - Revoked principals and stale generations are denied.
-- Unrelated local sessions, remote siblings, cousins, and skipped ancestors are denied.
 
-Later semantic versions will add broker-computed delegation and symmetric ancestor-chain reach. Gateways must negotiate the exact supported semantic version/hash rather than checking a boolean feature flag.
+Gateways negotiate the exact semantic version and golden-vector hash rather than checking a boolean feature flag.
 
 ## Verify
 

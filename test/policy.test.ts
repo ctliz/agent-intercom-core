@@ -27,7 +27,7 @@ for (const vector of POLICY_VECTORS) {
 test("policy semantic hash covers the complete golden vector corpus", () => {
   const payload = JSON.stringify({ version: POLICY_VECTOR_SCHEMA_VERSION, vectors: POLICY_VECTORS });
   assert.equal(createHash("sha256").update(payload).digest("hex"), POLICY_SEMANTICS_HASH);
-  assert.equal(POLICY_SEMANTICS_VERSION, 1);
+  assert.equal(POLICY_SEMANTICS_VERSION, 2);
 });
 
 function principal(input: Partial<PolicyPrincipal> & Pick<PolicyPrincipal, "id">): PolicyPrincipal {
@@ -35,7 +35,7 @@ function principal(input: Partial<PolicyPrincipal> & Pick<PolicyPrincipal, "id">
     kind: "remote",
     state: "active",
     generation: 1,
-    policy: "remote-parent",
+    policy: "remote-tree",
     rootSessionId: "root",
     ...input,
   };
@@ -90,7 +90,7 @@ test("adoption refuses ownership cycles", () => {
   assert.throws(() => adoptSubtree(state, "manager", "worker", "root"), /ownership cycle/);
 });
 
-test("phase-zero authorization is symmetric for direct parent pairs", () => {
+test("phase-one communication is symmetric across the ancestor chain", () => {
   const state = hierarchy();
   const ids = Object.keys(state.principals);
   for (const left of ids) {
@@ -100,4 +100,8 @@ test("phase-zero authorization is symmetric for direct parent pairs", () => {
       assert.equal(forward.allowed, reverse.allowed, `${left} ↔ ${right}`);
     }
   }
+  assert.equal(authorize(state, "root", "send", "worker").allowed, true);
+  assert.equal(authorize(state, "worker", "send", "root").allowed, true);
+  assert.equal(authorize(state, "manager", "revoke", "worker").allowed, true);
+  assert.equal(authorize(state, "worker", "revoke", "manager").allowed, false);
 });
