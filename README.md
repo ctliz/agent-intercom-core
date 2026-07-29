@@ -17,6 +17,20 @@ Version 2 provides ownership-tree routing:
 
 Gateways negotiate the exact semantic version and golden-vector hash rather than checking a boolean feature flag.
 
+## Dormant Boss-run contracts
+
+The additive `@dataforxyz/agent-intercom-core/boss` surface defines the `boss-run-v1` feature, a separate run-scoped authorization policy and vector hash, authenticated participant/authority/control contracts, canonical worker identity/state migration, and durable lifecycle delivery and supervision records.
+
+Publishing these constants does not advertise or activate the feature. A Boss participant must explicitly negotiate and echo-verify the exact feature version/hash with a protected broker; unknown Boss metadata and old brokers fail closed. The legacy `remote-access-v1` version 2 vectors/hash and ordinary non-Boss local-public behavior remain unchanged.
+
+Public package entry points are intentionally explicit:
+
+- `@dataforxyz/agent-intercom-core` remains a legacy-only root export of the policy kernel and frozen corpus; it does not aggregate canonical or Boss contracts.
+- `/policy` and `/vectors` provide the corresponding explicit legacy entry points.
+- `/canonical` exposes the shared canonical encoder, branded counters, and fail-closed store result contract.
+- `/boss` exposes all additive Boss feature, broker trust, restricted-client, participant-state, delivery, migration, and supervision contracts.
+- `/boss/policy` and `/boss/vectors` provide the separate Boss policy kernel and golden-vector surfaces.
+
 ## Verify
 
 ```bash

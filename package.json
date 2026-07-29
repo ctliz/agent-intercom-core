@@ -29,6 +29,22 @@
     "./vectors": {
       "types": "./dist/policy-vectors.d.ts",
       "import": "./dist/policy-vectors.js"
+    },
+    "./canonical": {
+      "types": "./dist/canonical.d.ts",
+      "import": "./dist/canonical.js"
+    },
+    "./boss": {
+      "types": "./dist/boss.d.ts",
+      "import": "./dist/boss.js"
+    },
+    "./boss/policy": {
+      "types": "./dist/boss-policy.d.ts",
+      "import": "./dist/boss-policy.js"
+    },
+    "./boss/vectors": {
+      "types": "./dist/boss-vectors.d.ts",
+      "import": "./dist/boss-vectors.js"
     }
   },
   "scripts": {
@@ -36,10 +52,12 @@
     "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.ts",
-    "verify": "npm run typecheck && npm test && npm run build"
+    "verify": "npm run typecheck && npm test && npm run build && node test/package-smoke.mjs"
+  },
+  "dependencies": {
+    "@types/node": "^24.10.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.0",
     "typescript": "^5.9.3"
   },
   "engines": {
