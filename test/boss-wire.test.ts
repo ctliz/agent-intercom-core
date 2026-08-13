@@ -157,19 +157,19 @@ function untrustedArrayShapeCases<T>(entries: readonly T[]): ArrayShapeCase<T>[]
 test("boss-run-v1 feature contract has an independent stable golden hash and rejects downgrade/unknown versions", () => {
   assert.equal(BOSS_RUN_FEATURE, "boss-run-v1");
   assert.equal(BOSS_RUN_FEATURE_VERSION, 1);
-  assert.equal(INTERCOM_BASE_PROTOCOL_VERSION, 3);
+  assert.equal(INTERCOM_BASE_PROTOCOL_VERSION, 4);
   assert.equal(BOSS_RUN_FEATURE_CONTRACT.baseProtocolVersion, INTERCOM_BASE_PROTOCOL_VERSION);
   assert.equal(BOSS_CONTROL_ENVELOPE_VERSION, 1);
-  assert.equal(BOSS_RUN_FEATURE_SEMANTICS_HASH, "91dc85ea8c896b9394ebc30db4689803004dbb1c5455eca763a09d0caef167f1");
-  assert.equal(BOSS_RUN_PROTOCOL_FEATURE_CONTRACT_HASH, "3532c82524f651a5ea8c18a5d8d9689955237d6f68227fc32b1c38e7ea8825d0");
-  assert.equal(BOSS_CAPABILITY_FEATURE_DIGEST, "6090d92d87223209c653111e2d22a6921e818f71c76b61679f1480ebe021a119");
+  assert.equal(BOSS_RUN_FEATURE_SEMANTICS_HASH, "8943eb60d29afa5264322b5cc7df3de245b01b1cf48a8cbf9cfb6188b02fcfa9");
+  assert.equal(BOSS_RUN_PROTOCOL_FEATURE_CONTRACT_HASH, "dae30efe2c48d2de0fe72a7ebdfd107d3feaefc180d42056ba05df6088a94364");
+  assert.equal(BOSS_CAPABILITY_FEATURE_DIGEST, "239bee8bb64cc8c149d49ac00c7396f33f375a89a1d6dea6bd86ff840d551a59");
   assert.equal(
     BOSS_RUN_FEATURE_SEMANTICS_CORPUS.controllerDeliveryRunIdentity,
     "embedded_and_top_level_boss_run_id_present_and_equal",
   );
   assert.deepEqual(parseBossRunFeatureContract(structuredClone(BOSS_RUN_FEATURE_CONTRACT)), BOSS_RUN_FEATURE_CONTRACT);
   rejectsContract(() => parseBossRunFeatureContract({ ...BOSS_RUN_FEATURE_CONTRACT, version: 2 }), /unsupported Boss feature version/);
-  for (const baseProtocolVersion of [1, 2]) {
+  for (const baseProtocolVersion of [1, 2, 3]) {
     rejectsContract(
       () => parseBossRunFeatureContract({ ...BOSS_RUN_FEATURE_CONTRACT, baseProtocolVersion }),
       /unsupported Boss base protocol version/,

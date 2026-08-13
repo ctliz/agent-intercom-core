@@ -3,7 +3,7 @@
  * contract. Keep this module free of imports so vector corpora may re-export
  * the reviewed bindings without introducing runtime initialization cycles.
  */
-export const INTERCOM_BASE_PROTOCOL_VERSION = 3 as const;
+export const INTERCOM_BASE_PROTOCOL_VERSION = 4 as const;
 
 export const PARTICIPANT_STATE_VECTOR_SCHEMA_VERSION = 1 as const;
 export const PARTICIPANT_STATE_VECTORS_HASH =

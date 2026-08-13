@@ -4,6 +4,8 @@ The shared security policy kernel and protocol primitives for the [Agent Interco
 
 This package is intentionally narrow. It contains pure, versioned authorization rules and policy state transitions used by every broker and remote gateway. Transport, worker lifecycle, queues, and harness integrations remain in their adapter repositories.
 
+The explicit `@dataforxyz/agent-intercom-core/protocol-v4` entry point is the canonical source for protocol-v4 constants, `scopeId` validation, strict same-scope comparison, acceptance vectors, and their semantics hash. It does not implement a broker; every adapter broker consumes or byte-for-byte mirrors this contract and must pass the vector corpus. `AGENT_INTERCOM_SCOPE_ID` is a general shell/IDE/service launcher contract; TmuxDeck is optional and is not required for scoped communication. The coordinated standalone release gate is documented in `docs/standalone-v4-acceptance.md`.
+
 ## Current policy semantics
 
 Version 2 provides ownership-tree routing:
@@ -28,6 +30,7 @@ Public package entry points are intentionally explicit:
 - `@dataforxyz/agent-intercom-core` remains a legacy-only root export of the policy kernel and frozen corpus; it does not aggregate canonical or Boss contracts.
 - `/policy` and `/vectors` provide the corresponding explicit legacy entry points.
 - `/canonical` exposes the shared canonical encoder, branded counters, and fail-closed store result contract.
+- `/protocol-v4` exposes the protocol-v4 constants, private registration-scope validation, and golden acceptance vectors.
 - `/boss` exposes all additive Boss feature, broker trust, restricted-client, participant-state, delivery, migration, and supervision contracts.
 - `/boss/policy` and `/boss/vectors` provide the separate Boss policy kernel and golden-vector surfaces.
 

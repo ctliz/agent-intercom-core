@@ -284,9 +284,9 @@ test("strict capability parsing validates every feature and the complete feature
   assert.throws(() => parseBrokerCapabilityAdvertisement({ ...advertisement, features: [{ ...feature, ignored: true }] }), /not supported/);
 });
 
-test("Boss advertisements require exact base protocol 3 while ordinary negotiation remains version-compatible", () => {
-  assert.equal(INTERCOM_BASE_PROTOCOL_VERSION, 3);
-  for (const baseProtocolVersion of [1, 2]) {
+test("Boss advertisements require exact base protocol 4 while ordinary negotiation remains version-compatible", () => {
+  assert.equal(INTERCOM_BASE_PROTOCOL_VERSION, 4);
+  for (const baseProtocolVersion of [1, 2, 3]) {
     const downgradedBossAdvertisement = { ...advertisement, baseProtocolVersion };
     assert.throws(
       () => parseBrokerCapabilityAdvertisement(downgradedBossAdvertisement),
@@ -750,7 +750,7 @@ test("Boss compatibility is a single fail-closed binding predicate with distinct
     { compatible: true, mode: "boss" },
   );
   assert.deepEqual(evaluateBrokerCompatibility({ clientKind: "ordinary", supportedBaseProtocolVersions: [3] }, { baseProtocolVersion: 3, features: [] }), { compatible: true, mode: "ordinary" });
-  assert.deepEqual(evaluateBrokerCompatibility(bossCompatibilityRequest(), { baseProtocolVersion: 3, features: [] }), { compatible: false, code: "BOSS_FEATURE_REQUIRED" });
+  assert.deepEqual(evaluateBrokerCompatibility(bossCompatibilityRequest(), { baseProtocolVersion: 4, features: [] }), { compatible: false, code: "BOSS_FEATURE_REQUIRED" });
   assert.deepEqual(evaluateBrokerCompatibility(bossCompatibilityRequest(), advertisement), { compatible: false, code: "PROTECTED_IDENTITY_REQUIRED" });
 
   const unsignedIdentity = { ...identity } as Record<string, unknown>;

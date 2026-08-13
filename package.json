@@ -14,6 +14,8 @@
   },
   "files": [
     "dist",
+    "docs/standalone-v4-acceptance.md",
+    "PROTOCOL-V4-DESIGN.md",
     "LICENSE",
     "README.md"
   ],
@@ -33,6 +35,10 @@
     "./canonical": {
       "types": "./dist/canonical.d.ts",
       "import": "./dist/canonical.js"
+    },
+    "./protocol-v4": {
+      "types": "./dist/protocol-v4.d.ts",
+      "import": "./dist/protocol-v4.js"
     },
     "./boss": {
       "types": "./dist/boss.d.ts",

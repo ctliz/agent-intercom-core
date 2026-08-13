@@ -31,6 +31,10 @@ const expectedExports = {
     types: "./dist/canonical.d.ts",
     import: "./dist/canonical.js",
   },
+  "./protocol-v4": {
+    types: "./dist/protocol-v4.d.ts",
+    import: "./dist/protocol-v4.js",
+  },
   "./boss": {
     types: "./dist/boss.d.ts",
     import: "./dist/boss.js",
@@ -187,6 +191,7 @@ import * as root from "@dataforxyz/agent-intercom-core";
 import * as policy from "@dataforxyz/agent-intercom-core/policy";
 import * as vectors from "@dataforxyz/agent-intercom-core/vectors";
 import * as canonical from "@dataforxyz/agent-intercom-core/canonical";
+import * as protocolV4 from "@dataforxyz/agent-intercom-core/protocol-v4";
 import * as boss from "@dataforxyz/agent-intercom-core/boss";
 import * as bossPolicy from "@dataforxyz/agent-intercom-core/boss/policy";
 import * as bossVectors from "@dataforxyz/agent-intercom-core/boss/vectors";
@@ -205,6 +210,8 @@ assert.equal(boss.BOSS_RUN_FEATURE, "boss-run-v1");
 assert.equal(boss.BOSS_POLICY_SEMANTICS_HASH, bossVectors.BOSS_POLICY_SEMANTICS_HASH);
 assert.equal(bossPolicy.BOSS_POLICY_SEMANTICS_VERSION, 1);
 assert.equal(typeof canonical.canonicalHash, "function");
+assert.equal(protocolV4.INTERCOM_PROTOCOL_VERSION, 4);
+assert.match(protocolV4.INTERCOM_PROTOCOL_V4_SEMANTICS_HASH, /^[a-f0-9]{64}$/);
 `,
   );
   await run(process.execPath, ["consumer.mjs"], consumerDirectory);
@@ -215,12 +222,13 @@ assert.equal(typeof canonical.canonicalHash, "function");
 import * as policy from "@dataforxyz/agent-intercom-core/policy";
 import * as vectors from "@dataforxyz/agent-intercom-core/vectors";
 import * as canonical from "@dataforxyz/agent-intercom-core/canonical";
+import * as protocolV4 from "@dataforxyz/agent-intercom-core/protocol-v4";
 import * as boss from "@dataforxyz/agent-intercom-core/boss";
 import * as bossPolicy from "@dataforxyz/agent-intercom-core/boss/policy";
 import * as bossVectors from "@dataforxyz/agent-intercom-core/boss/vectors";
 
 type BrokerPublicKey = import("@dataforxyz/agent-intercom-core/boss").BrokerPublicKey;
-const surfaces = [root, policy, vectors, canonical, boss, bossPolicy, bossVectors];
+const surfaces = [root, policy, vectors, canonical, protocolV4, boss, bossPolicy, bossVectors];
 const brokerPublicKey = null as unknown as BrokerPublicKey;
 // @ts-expect-error Boss contracts are intentionally absent from the legacy root.
 root.BOSS_RUN_FEATURE;
