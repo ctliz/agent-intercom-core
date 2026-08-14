@@ -33,7 +33,7 @@ The explicit `@ctliz/agent-intercom-core/protocol-v4` entry point is the canonic
 
 ## Upgrading from `connect.1` to `connect.2`
 
-`connect.2` renames the canonical package namespace from `@dataforxyz/*` to `@ctliz/*`. The two namespaces are different packages to npm and to the Pi extension loader, so they must never be installed at the same time.
+`connect.2` renames the canonical package namespace from `@dataforxyz/*` to `@ctliz/*`. The two namespaces are different packages to npm. Pi Git package installations deduplicate by repository URL without ref, but running agent sessions continue to execute legacy code in memory, and npm or global installs along with binary links can coexist and conflict. Operators must stop active sessions, clean active install surfaces, and follow remove-before-install — side-by-side installation is not supported.
 
 **Scope of a coordinated upgrade.** Upgrade the broker-capable adapters that are *actually installed and enabled on this machine* — any of Pi, Claude, Codex, and OpenCode — within one maintenance window, because they negotiate against a shared Broker. Adapters you do not use do not need to be installed to satisfy the upgrade. Core is an internal dependency and is not upgraded on its own; it arrives with the adapters. Orchestrator is optional and Linux/systemd only: omitting it (for example on macOS, or with TmuxDeck) is a fully supported configuration and is **not** a mixed or unsupported state. If it is installed on a supported Linux or systemd-enabled WSL host, update it together with the adapters it manages so scope inheritance and package identity stay aligned.
 
