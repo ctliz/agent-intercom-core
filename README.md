@@ -1,52 +1,34 @@
 # Agent Intercom Core
 
-The shared security policy kernel and protocol primitives for the [Agent Intercom](https://github.com/dataforxyz/agent-intercom-pi) adapter family.
+The shared security policy kernel and protocol primitives for the [Agent Intercom](https://github.com/ctliz/agent-intercom-pi) adapter family.
 
-This package is intentionally narrow. It contains pure, versioned authorization rules and policy state transitions used by every broker and remote gateway. Transport, worker lifecycle, queues, and harness integrations remain in their adapter repositories.
+| Harness | Repository |
+|---|---|
+| Core / Protocol | [`agent-intercom-core`](https://github.com/ctliz/agent-intercom-core) |
+| Pi | [`agent-intercom-pi`](https://github.com/ctliz/agent-intercom-pi) |
+| Codex | [`agent-intercom-codex`](https://github.com/ctliz/agent-intercom-codex) |
+| Claude Code | [`agent-intercom-claude`](https://github.com/ctliz/agent-intercom-claude) |
+| OpenCode | [`agent-intercom-opencode`](https://github.com/ctliz/agent-intercom-opencode) |
+| Fleet lifecycle | [`agent-intercom-orchestrator`](https://github.com/ctliz/agent-intercom-orchestrator) |
 
-The explicit `@dataforxyz/agent-intercom-core/protocol-v4` entry point is the canonical source for protocol-v4 constants, `scopeId` validation, strict same-scope comparison, acceptance vectors, and their semantics hash. It does not implement a broker; every adapter broker consumes or byte-for-byte mirrors this contract and must pass the vector corpus. `AGENT_INTERCOM_SCOPE_ID` is a general shell/IDE/service launcher contract; TmuxDeck is optional and is not required for scoped communication. The coordinated standalone release gate is documented in `docs/standalone-v4-acceptance.md`.
+## Maintenance & Upstream Provenance
 
-## Current policy semantics
+- **Maintained by `ctliz`**: This distribution is maintained independently by [ctliz](https://github.com/ctliz).
+- **Upstream Heritage**: Agent Intercom grew from [Nico Bailon's original `pi-intercom`](https://github.com/nicobailon/pi-intercom) and the upstream `dataforxyz/*` repositories. This project is not officially endorsed by or affiliated with upstream organizations.
+- **Branding & Compatibility**: The **Agent Intercom** branding and `@dataforxyz/*` package namespaces remain unchanged.
 
-Version 2 provides ownership-tree routing:
+## Protocol v4 Scope & Security Contract
 
-- Existing local sessions retain public local behavior.
-- Communication is symmetric along one ancestor chain: root ↔ manager ↔ lead ↔ worker.
-- Remote siblings, cousins, unrelated local sessions, and unrelated trees remain denied.
-- Administrative subtree actions are directional: ancestors may inspect, revoke, or adopt descendants, while descendants cannot control ancestors.
-- A principal may request attenuated child delegation only under itself.
-- Revoked principals and stale generations are denied.
+This package is intentionally narrow. It contains pure, versioned authorization rules, canonical protocol vectors, and policy state transitions used by every broker and remote gateway. Transport, worker lifecycle, queues, and harness integrations remain in their adapter repositories.
 
-Gateways negotiate the exact semantic version and golden-vector hash rather than checking a boolean feature flag.
+The explicit `@dataforxyz/agent-intercom-core/protocol-v4` entry point is the canonical source for protocol-v4 constants, `scopeId` validation, strict same-scope comparison, acceptance vectors, and their semantics hash:
 
-## Dormant Boss-run contracts
-
-The additive `@dataforxyz/agent-intercom-core/boss` surface defines the `boss-run-v1` feature, a separate run-scoped authorization policy and vector hash, authenticated participant/authority/control contracts, canonical worker identity/state migration, and durable lifecycle delivery and supervision records.
-
-Publishing these constants does not advertise or activate the feature. A Boss participant must explicitly negotiate and echo-verify the exact feature version/hash with a protected broker; unknown Boss metadata and old brokers fail closed. The legacy `remote-access-v1` version 2 vectors/hash and ordinary non-Boss local-public behavior remain unchanged.
-
-Public package entry points are intentionally explicit:
-
-- `@dataforxyz/agent-intercom-core` remains a legacy-only root export of the policy kernel and frozen corpus; it does not aggregate canonical or Boss contracts.
-- `/policy` and `/vectors` provide the corresponding explicit legacy entry points.
-- `/canonical` exposes the shared canonical encoder, branded counters, and fail-closed store result contract.
-- `/protocol-v4` exposes the protocol-v4 constants, private registration-scope validation, and golden acceptance vectors.
-- `/boss` exposes all additive Boss feature, broker trust, restricted-client, participant-state, delivery, migration, and supervision contracts.
-- `/boss/policy` and `/boss/vectors` provide the separate Boss policy kernel and golden-vector surfaces.
-
-## Verify
-
-```bash
-npm install
-npm run verify
-```
-
-The golden policy-vector corpus is hashed and asserted in tests. Any semantic change requires a deliberate version/hash update.
-
-## Security boundary
-
-The policy kernel limits broker visibility and routing. It does not isolate hostile processes sharing one Unix account or host. Remote deployments should still use SSH/TLS transport, private credential files, dedicated users or containers where needed, and a physically separate authenticated remote gateway endpoint rather than forwarding the raw local broker socket.
+- **Broker-Enforced Scope**: Client registers its `scopeId` on connect. The broker maintains `scopeId` in its private session state and enforces same-scope discovery (`intercom_list`), naming, and prefix resolution. Cross-scope messaging requires an explicit full session ID.
+- **UX Isolation Boundary**: Scope provides same-OS-user workflow isolation (e.g. per-project or per-workspace agent teams), **not** an authentication, tenant, or security principal boundary.
+- **No Raw Scope Value Leaks**: Scope terminology, the validation pattern, and the vector schema are public API and are exported from this package. What must never leak is the *raw scope value*: it never enters `SessionInfo`, discovery/list/lifecycle frames, frontend or mobile surfaces, logs, or public evidence. Scope validation failures report the offending field path and the public pattern without echoing the raw input.
+- **Standalone Contract**: `AGENT_INTERCOM_SCOPE_ID` is a general shell/IDE/service launcher contract; TmuxDeck is optional visual tooling.
+- The coordinated standalone release gate is documented in `docs/standalone-v4-acceptance.md`.
 
 ## License
 
-`AGPL-3.0-or-later`.
+GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`). See `LICENSE` and `PROTOCOL-V4-DESIGN.md`.
