@@ -1,6 +1,6 @@
 # Agent Intercom protocol v4 — scoped broker design
 
-Status: coordinated candidate, not released or installed.
+Status: protocol v4 shipped in the `connect.1` release. The current work is the `connect.2` package-namespace migration candidate (`@dataforxyz/*` → `@ctliz/*`), which is not yet released or installed. The protocol wire contract, acceptance vectors, and semantics hash are unchanged by that migration.
 
 ## Wire contract
 
@@ -34,19 +34,19 @@ For same-ID replacement across scopes, recipients in the old scope observe `left
 
 `AGENT_INTERCOM_SCOPE_ID` is a general launcher contract. Shells, direnv, IDEs, service managers, CI, and optional desktop launchers may set it; TmuxDeck is not required. Documentation must not require `TMUXDECK_WORKSPACE` or derive scope from TmuxDeck metadata.
 
-Every adapter reads `AGENT_INTERCOM_SCOPE_ID` at registration and sends the exact validated value. Reconnect keeps the same value. Child processes and managed workers inherit this private environment by default, including manager/worker, restart, resume, adopt, and nested ownership paths. Contact-copy output always includes the full session ID.
+Each broker-capable adapter (Pi, Claude, Codex, OpenCode) reads `AGENT_INTERCOM_SCOPE_ID` at registration and sends the exact validated value. Reconnect keeps the same value. Child processes and managed workers inherit this private environment by default, including manager/worker, restart, resume, adopt, and nested ownership paths. Contact-copy output always includes the full session ID.
 
 `scopeId` and session IDs are routing identifiers, not credentials. Protocol-v4 scope is same-UID UX isolation and a broker visibility boundary; it is not tenant isolation against hostile processes sharing the Unix account.
 
 ## Canonical source and drift guard
 
-`@dataforxyz/agent-intercom-core/protocol-v4` is the canonical source for constants, validation, acceptance vectors, and the semantics hash. Core remains a pure-contract package and does not host the broker.
+`@ctliz/agent-intercom-core/protocol-v4` is the canonical source for constants, validation, acceptance vectors, and the semantics hash. Core remains a pure-contract package and does not host the broker.
 
-Every broker package must either consume this entry point or vendor an auditable one-file re-export with a coordinated source SHA-256 test. Every package must assert the same vector schema version and semantics hash. Cross-package acceptance starts each package's broker and runs the same machine-readable corpus.
+Each broker-capable package must either consume this entry point or vendor an auditable one-file re-export with a coordinated source SHA-256 test, and must assert the same vector schema version and semantics hash. Cross-package acceptance starts each participating package's broker and runs the same machine-readable corpus. Core itself is an internal dependency rather than a separately installed runtime component, and Orchestrator neither implements nor starts a broker, so it is outside this broker compatibility set.
 
 ## Standalone release gate
 
-The coordinated release must pass `docs/standalone-v4-acceptance.md` from a separate cross-package integration workspace using packed tarballs. The gate explicitly removes terminal/TmuxDeck metadata, never invokes TmuxDeck, launches every adapter directly from a shell, repeats the corpus with each package owning the broker, validates A/B/unscoped cross-harness messaging and orchestrator inheritance, and proves exact cleanup without changing the real v3 broker or default tmux state.
+The coordinated release must pass `docs/standalone-v4-acceptance.md` from a separate cross-package integration workspace using packed tarballs. The gate explicitly removes terminal/TmuxDeck metadata, never invokes TmuxDeck, launches each participating broker-capable adapter directly from a shell, repeats the corpus with each package owning the broker, validates A/B/unscoped cross-harness messaging, and proves exact cleanup without changing the real v3 broker or default tmux state. Orchestrator inheritance is validated only when Orchestrator is installed on a supported Linux/systemd host; its absence is a supported configuration, not a gate failure.
 
 ## Replacement and non-leak acceptance
 

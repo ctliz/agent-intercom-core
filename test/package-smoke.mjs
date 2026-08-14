@@ -91,7 +91,7 @@ try {
   const consumerDirectory = join(temporaryRoot, "consumer");
   const installedPackageDirectory = join(
     consumerDirectory,
-    "node_modules/@dataforxyz/agent-intercom-core",
+    "node_modules/@ctliz/agent-intercom-core",
   );
   await mkdir(packDirectory);
   await mkdir(npmCacheDirectory);
@@ -187,14 +187,14 @@ try {
   await writeFile(
     join(consumerDirectory, "consumer.mjs"),
     `import assert from "node:assert/strict";
-import * as root from "@dataforxyz/agent-intercom-core";
-import * as policy from "@dataforxyz/agent-intercom-core/policy";
-import * as vectors from "@dataforxyz/agent-intercom-core/vectors";
-import * as canonical from "@dataforxyz/agent-intercom-core/canonical";
-import * as protocolV4 from "@dataforxyz/agent-intercom-core/protocol-v4";
-import * as boss from "@dataforxyz/agent-intercom-core/boss";
-import * as bossPolicy from "@dataforxyz/agent-intercom-core/boss/policy";
-import * as bossVectors from "@dataforxyz/agent-intercom-core/boss/vectors";
+import * as root from "@ctliz/agent-intercom-core";
+import * as policy from "@ctliz/agent-intercom-core/policy";
+import * as vectors from "@ctliz/agent-intercom-core/vectors";
+import * as canonical from "@ctliz/agent-intercom-core/canonical";
+import * as protocolV4 from "@ctliz/agent-intercom-core/protocol-v4";
+import * as boss from "@ctliz/agent-intercom-core/boss";
+import * as bossPolicy from "@ctliz/agent-intercom-core/boss/policy";
+import * as bossVectors from "@ctliz/agent-intercom-core/boss/vectors";
 
 assert.equal(root.POLICY_SEMANTICS_HASH, "f3b00e503631bc91123aedfbcf1df72cc9913e1893c09728b2c598f3dcdfdfe0");
 assert.deepEqual(
@@ -218,16 +218,16 @@ assert.match(protocolV4.INTERCOM_PROTOCOL_V4_SEMANTICS_HASH, /^[a-f0-9]{64}$/);
 
   await writeFile(
     join(consumerDirectory, "consumer.ts"),
-    `import * as root from "@dataforxyz/agent-intercom-core";
-import * as policy from "@dataforxyz/agent-intercom-core/policy";
-import * as vectors from "@dataforxyz/agent-intercom-core/vectors";
-import * as canonical from "@dataforxyz/agent-intercom-core/canonical";
-import * as protocolV4 from "@dataforxyz/agent-intercom-core/protocol-v4";
-import * as boss from "@dataforxyz/agent-intercom-core/boss";
-import * as bossPolicy from "@dataforxyz/agent-intercom-core/boss/policy";
-import * as bossVectors from "@dataforxyz/agent-intercom-core/boss/vectors";
+    `import * as root from "@ctliz/agent-intercom-core";
+import * as policy from "@ctliz/agent-intercom-core/policy";
+import * as vectors from "@ctliz/agent-intercom-core/vectors";
+import * as canonical from "@ctliz/agent-intercom-core/canonical";
+import * as protocolV4 from "@ctliz/agent-intercom-core/protocol-v4";
+import * as boss from "@ctliz/agent-intercom-core/boss";
+import * as bossPolicy from "@ctliz/agent-intercom-core/boss/policy";
+import * as bossVectors from "@ctliz/agent-intercom-core/boss/vectors";
 
-type BrokerPublicKey = import("@dataforxyz/agent-intercom-core/boss").BrokerPublicKey;
+type BrokerPublicKey = import("@ctliz/agent-intercom-core/boss").BrokerPublicKey;
 const surfaces = [root, policy, vectors, canonical, protocolV4, boss, bossPolicy, bossVectors];
 const brokerPublicKey = null as unknown as BrokerPublicKey;
 // @ts-expect-error Boss contracts are intentionally absent from the legacy root.

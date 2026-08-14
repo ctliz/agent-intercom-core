@@ -1,16 +1,16 @@
 {
-  "name": "@dataforxyz/agent-intercom-core",
+  "name": "@ctliz/agent-intercom-core",
   "version": "0.1.0",
   "description": "Shared security policy kernel and protocol primitives for Agent Intercom",
   "type": "module",
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dataforxyz/agent-intercom-core.git"
+    "url": "git+https://github.com/ctliz/agent-intercom-core.git"
   },
-  "homepage": "https://github.com/dataforxyz/agent-intercom-core#readme",
+  "homepage": "https://github.com/ctliz/agent-intercom-core#readme",
   "bugs": {
-    "url": "https://github.com/dataforxyz/agent-intercom-core/issues"
+    "url": "https://github.com/ctliz/agent-intercom-core/issues"
   },
   "files": [
     "dist",

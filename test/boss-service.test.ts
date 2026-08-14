@@ -92,7 +92,7 @@ const advertisement = boundAdvertisement([feature]);
 function signedProvider(overrides: Record<string, unknown> = {}): BrokerProviderAttestation {
   const unsigned = {
     version: BROKER_PROVIDER_ATTESTATION_VERSION,
-    providerPackage: "@dataforxyz/agent-intercom-pi",
+    providerPackage: "@ctliz/agent-intercom-pi",
     providerVersion: "1.0.0",
     providerDigest: "a".repeat(64),
     artifactPath: "/usr/lib/agent-intercom/providers/pi-broker",
