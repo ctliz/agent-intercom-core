@@ -47,6 +47,10 @@ const expectedExports = {
     types: "./dist/boss-vectors.d.ts",
     import: "./dist/boss-vectors.js",
   },
+  "./team-manifest": {
+    types: "./dist/team-manifest.d.ts",
+    import: "./dist/team-manifest.js",
+  },
 };
 
 function run(command, args, cwd, environment = {}) {
@@ -95,7 +99,7 @@ try {
   );
   await mkdir(packDirectory);
   await mkdir(npmCacheDirectory);
-  await mkdir(installedPackageDirectory, { recursive: true });
+  await mkdir(consumerDirectory, { recursive: true });
   assert.deepEqual(await readdir(npmCacheDirectory), []);
 
   await run(
@@ -121,18 +125,31 @@ try {
   assert.equal(tarballs.length, 1);
   const tarball = join(packDirectory, tarballs[0]);
 
+  // Set up consumer package.json
+  await writeFile(
+    join(consumerDirectory, "package.json"),
+    `${JSON.stringify({ private: true, type: "module" }, null, 2)}\n`,
+  );
+
+  // Install packed Core tarball using empty npm cache in offline mode
+  // This verifies zero runtime dependencies: ENOTCACHE will be thrown if any dependency is needed
   await run(
-    "tar",
+    "npm",
     [
-      "--extract",
-      "--gzip",
-      "--file",
+      "install",
+      "--ignore-scripts",
+      "--offline",
+      "--cache",
+      npmCacheDirectory,
       tarball,
-      "--directory",
-      installedPackageDirectory,
-      "--strip-components=1",
     ],
-    packageRoot,
+    consumerDirectory,
+    {
+      npm_config_audit: "false",
+      npm_config_fund: "false",
+      npm_config_offline: "true",
+      npm_config_update_notifier: "false",
+    },
   );
 
   const installedPackage = await readJson(join(installedPackageDirectory, "package.json"));
@@ -142,32 +159,69 @@ try {
     await access(join(installedPackageDirectory, declaration.import));
   }
 
-  const nodeTypesRange = installedPackage.dependencies?.["@types/node"];
+  // Verify packed package has ZERO runtime dependencies
   assert.equal(
-    typeof nodeTypesRange,
-    "string",
-    "the packed package must declare @types/node as a dependency",
+    installedPackage.dependencies,
+    undefined,
+    "the packed package must have zero runtime dependencies",
   );
 
+  // Verify package manifest & lockfile devDependencies pinning
   const lockfile = await readJson(join(packageRoot, "package-lock.json"));
-  assert.equal(lockfile.packages[""].dependencies?.["@types/node"], nodeTypesRange);
+  assert.equal(lockfile.packages[""].dependencies, undefined);
+  assert.equal(lockfile.packages[""].devDependencies?.["@types/node"], "24.13.3");
+
   const localNodeTypesDirectory = join(packageRoot, "node_modules/@types/node");
   const localNodeTypesPackage = await readJson(join(localNodeTypesDirectory, "package.json"));
-  assert.equal(
-    localNodeTypesPackage.version,
-    lockfile.packages["node_modules/@types/node"].version,
-  );
-  const undiciTypesRange = localNodeTypesPackage.dependencies?.["undici-types"];
-  assert.equal(typeof undiciTypesRange, "string");
+  assert.equal(localNodeTypesPackage.version, "24.13.3");
+
   const localUndiciTypesDirectory = join(packageRoot, "node_modules/undici-types");
-  const localUndiciTypesPackage = await readJson(
-    join(localUndiciTypesDirectory, "package.json"),
-  );
+  const localUndiciTypesPackage = await readJson(join(localUndiciTypesDirectory, "package.json"));
   assert.equal(
     localUndiciTypesPackage.version,
     lockfile.packages["node_modules/undici-types"].version,
   );
 
+  // JS consumer test: import every public export
+  await writeFile(
+    join(consumerDirectory, "consumer.mjs"),
+    `import assert from "node:assert/strict";
+import * as root from "@ctliz/agent-intercom-core";
+import * as policy from "@ctliz/agent-intercom-core/policy";
+import * as vectors from "@ctliz/agent-intercom-core/vectors";
+import * as canonical from "@ctliz/agent-intercom-core/canonical";
+import * as protocolV4 from "@ctliz/agent-intercom-core/protocol-v4";
+import * as boss from "@ctliz/agent-intercom-core/boss";
+import * as bossPolicy from "@ctliz/agent-intercom-core/boss/policy";
+import * as bossVectors from "@ctliz/agent-intercom-core/boss/vectors";
+import * as teamManifest from "@ctliz/agent-intercom-core/team-manifest";
+
+assert.equal(root.POLICY_SEMANTICS_HASH, "f3b00e503631bc91123aedfbcf1df72cc9913e1893c09728b2c598f3dcdfdfe0");
+assert.deepEqual(
+  Object.keys(root).sort(),
+  [...new Set([...Object.keys(policy), ...Object.keys(vectors), ...Object.keys(teamManifest)])].sort(),
+);
+assert.equal(Object.hasOwn(root, "canonicalHash"), false);
+assert.equal(Object.hasOwn(root, "BOSS_RUN_FEATURE"), false);
+assert.equal(policy.POLICY_SEMANTICS_VERSION, 2);
+assert.equal(typeof policy.authorize, "function");
+assert.equal(vectors.POLICY_SEMANTICS_HASH, root.POLICY_SEMANTICS_HASH);
+assert.equal(boss.BOSS_RUN_FEATURE, "boss-run-v1");
+assert.equal(boss.BOSS_POLICY_SEMANTICS_HASH, bossVectors.BOSS_POLICY_SEMANTICS_HASH);
+assert.equal(bossPolicy.BOSS_POLICY_SEMANTICS_VERSION, 1);
+assert.equal(typeof canonical.canonicalHash, "function");
+assert.equal(protocolV4.INTERCOM_PROTOCOL_VERSION, 4);
+assert.match(protocolV4.INTERCOM_PROTOCOL_V4_SEMANTICS_HASH, /^[a-f0-9]{64}$/);
+assert.equal(teamManifest.TMUXDECK_TEAM_MANIFEST_VERSION, "tmuxdeck.team.v1");
+assert.equal(teamManifest.TMUXDECK_TEAM_MANIFEST_BACKEND, "tmuxdeck");
+assert.equal(typeof teamManifest.parseTeamManifest, "function");
+assert.equal(typeof teamManifest.readTeamManifest, "function");
+assert.equal(typeof root.readTeamManifest, "function");
+`,
+  );
+  await run(process.execPath, ["consumer.mjs"], consumerDirectory);
+
+  // TS consumer test: supply dev-only types and compile declaration consumers
   await mkdir(join(consumerDirectory, "node_modules/@types"), { recursive: true });
   await cp(
     localNodeTypesDirectory,
@@ -181,42 +235,6 @@ try {
   );
 
   await writeFile(
-    join(consumerDirectory, "package.json"),
-    `${JSON.stringify({ private: true, type: "module" }, null, 2)}\n`,
-  );
-  await writeFile(
-    join(consumerDirectory, "consumer.mjs"),
-    `import assert from "node:assert/strict";
-import * as root from "@ctliz/agent-intercom-core";
-import * as policy from "@ctliz/agent-intercom-core/policy";
-import * as vectors from "@ctliz/agent-intercom-core/vectors";
-import * as canonical from "@ctliz/agent-intercom-core/canonical";
-import * as protocolV4 from "@ctliz/agent-intercom-core/protocol-v4";
-import * as boss from "@ctliz/agent-intercom-core/boss";
-import * as bossPolicy from "@ctliz/agent-intercom-core/boss/policy";
-import * as bossVectors from "@ctliz/agent-intercom-core/boss/vectors";
-
-assert.equal(root.POLICY_SEMANTICS_HASH, "f3b00e503631bc91123aedfbcf1df72cc9913e1893c09728b2c598f3dcdfdfe0");
-assert.deepEqual(
-  Object.keys(root).sort(),
-  [...new Set([...Object.keys(policy), ...Object.keys(vectors)])].sort(),
-);
-assert.equal(Object.hasOwn(root, "canonicalHash"), false);
-assert.equal(Object.hasOwn(root, "BOSS_RUN_FEATURE"), false);
-assert.equal(policy.POLICY_SEMANTICS_VERSION, 2);
-assert.equal(typeof policy.authorize, "function");
-assert.equal(vectors.POLICY_SEMANTICS_HASH, root.POLICY_SEMANTICS_HASH);
-assert.equal(boss.BOSS_RUN_FEATURE, "boss-run-v1");
-assert.equal(boss.BOSS_POLICY_SEMANTICS_HASH, bossVectors.BOSS_POLICY_SEMANTICS_HASH);
-assert.equal(bossPolicy.BOSS_POLICY_SEMANTICS_VERSION, 1);
-assert.equal(typeof canonical.canonicalHash, "function");
-assert.equal(protocolV4.INTERCOM_PROTOCOL_VERSION, 4);
-assert.match(protocolV4.INTERCOM_PROTOCOL_V4_SEMANTICS_HASH, /^[a-f0-9]{64}$/);
-`,
-  );
-  await run(process.execPath, ["consumer.mjs"], consumerDirectory);
-
-  await writeFile(
     join(consumerDirectory, "consumer.ts"),
     `import * as root from "@ctliz/agent-intercom-core";
 import * as policy from "@ctliz/agent-intercom-core/policy";
@@ -226,16 +244,20 @@ import * as protocolV4 from "@ctliz/agent-intercom-core/protocol-v4";
 import * as boss from "@ctliz/agent-intercom-core/boss";
 import * as bossPolicy from "@ctliz/agent-intercom-core/boss/policy";
 import * as bossVectors from "@ctliz/agent-intercom-core/boss/vectors";
+import * as teamManifest from "@ctliz/agent-intercom-core/team-manifest";
 
 type BrokerPublicKey = import("@ctliz/agent-intercom-core/boss").BrokerPublicKey;
-const surfaces = [root, policy, vectors, canonical, protocolV4, boss, bossPolicy, bossVectors];
+type TmuxDeckTeamManifest = import("@ctliz/agent-intercom-core/team-manifest").TmuxDeckTeamManifest;
+const surfaces = [root, policy, vectors, canonical, protocolV4, boss, bossPolicy, bossVectors, teamManifest];
 const brokerPublicKey = null as unknown as BrokerPublicKey;
+const manifest = null as unknown as TmuxDeckTeamManifest;
 // @ts-expect-error Boss contracts are intentionally absent from the legacy root.
 root.BOSS_RUN_FEATURE;
 // @ts-expect-error Canonical contracts are intentionally absent from the legacy root.
 root.canonicalHash;
 void surfaces;
 void brokerPublicKey;
+void manifest;
 `,
   );
   await writeFile(

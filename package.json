@@ -1,6 +1,6 @@
 {
   "name": "@ctliz/agent-intercom-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared security policy kernel and protocol primitives for Agent Intercom",
   "type": "module",
   "license": "AGPL-3.0-or-later",
@@ -51,6 +51,10 @@
     "./boss/vectors": {
       "types": "./dist/boss-vectors.d.ts",
       "import": "./dist/boss-vectors.js"
+    },
+    "./team-manifest": {
+      "types": "./dist/team-manifest.d.ts",
+      "import": "./dist/team-manifest.js"
     }
   },
   "scripts": {
@@ -60,10 +64,8 @@
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "verify": "npm run typecheck && npm test && npm run build && node test/package-smoke.mjs"
   },
-  "dependencies": {
-    "@types/node": "^24.10.0"
-  },
   "devDependencies": {
+    "@types/node": "24.13.3",
     "typescript": "^5.9.3"
   },
   "engines": {

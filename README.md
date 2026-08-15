@@ -31,6 +31,10 @@ The explicit `@ctliz/agent-intercom-core/protocol-v4` entry point is the canonic
 - **Standalone Contract**: `AGENT_INTERCOM_SCOPE_ID` is a general shell/IDE/service launcher contract; TmuxDeck is optional visual tooling.
 - The coordinated standalone release gate is documented in `docs/standalone-v4-acceptance.md`.
 
+## Zero Runtime Dependencies & Offline Installation
+
+`@ctliz/agent-intercom-core` has zero runtime npm dependencies (`dependencies` is omitted), making it fully self-contained and suitable for offline, air-gapped, or app-private installations (such as TmuxDeck managed staging). Development-time type declarations (`@types/node`) are strictly isolated to `devDependencies`.
+
 ## Upgrading from `connect.1` to `connect.2`
 
 `connect.2` renames the canonical package namespace from `@dataforxyz/*` to `@ctliz/*`. The two namespaces are different packages to npm. Pi Git package installations deduplicate by repository URL without ref, but running agent sessions continue to execute legacy code in memory, and npm or global installs along with binary links can coexist and conflict. Operators must stop active sessions, clean active install surfaces, and follow remove-before-install — side-by-side installation is not supported.
